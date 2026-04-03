@@ -1,5 +1,5 @@
 {
-  "name": "codesense",
+  "name": "@codesenseai/codesense",
   "version": "1.0.0",
   "description": "CLI for CodeSense AI quality gate — submit diffs, get scores, fail CI on poor code.",
   "keywords": ["code-review", "ci", "quality-gate", "ai", "codesense"],

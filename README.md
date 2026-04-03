@@ -5,7 +5,7 @@
 Submit a git diff to [CodeSense AI](https://codesense.online), get an AI + static analysis score, and automatically pass or fail your build — all in one command.
 
 ```bash
-npx codesense check --api-key cs_xxx --diff changes.diff --threshold 70
+npx @codesenseai/codesense check --api-key cs_xxx --diff changes.diff --threshold 70
 ```
 
 ---
@@ -15,13 +15,13 @@ npx codesense check --api-key cs_xxx --diff changes.diff --threshold 70
 No installation needed. Use directly with `npx`:
 
 ```bash
-npx codesense@latest check ...
+npx @codesenseai/codesense@latest check ...
 ```
 
 Or install globally:
 
 ```bash
-npm install -g codesense
+npm install -g @codesenseai/codesense
 ```
 
 ---
@@ -62,18 +62,18 @@ codesense check --api-key <key> --diff <file> [options]
 
 ### Pipe diff from stdin
 ```bash
-git diff origin/main...HEAD | npx codesense check --api-key cs_xxx --diff -
+git diff origin/main...HEAD | npx @codesenseai/codesense check --api-key cs_xxx --diff -
 ```
 
 ### From a diff file
 ```bash
 git diff origin/main...HEAD > changes.diff
-npx codesense check --api-key cs_xxx --diff changes.diff --threshold 80
+npx @codesenseai/codesense check --api-key cs_xxx --diff changes.diff --threshold 80
 ```
 
 ### Output raw JSON (for custom scripts)
 ```bash
-npx codesense check --api-key cs_xxx --diff - --json < changes.diff
+npx @codesenseai/codesense check --api-key cs_xxx --diff - --json < changes.diff
 ```
 
 ---
@@ -99,7 +99,7 @@ jobs:
 
       - name: Run CodeSense check
         run: |
-          npx codesense@latest check \
+          npx @codesenseai/codesense@latest check \
             --api-key ${{ secrets.CODESENSE_API_KEY }} \
             --diff changes.diff \
             --threshold 70
@@ -117,7 +117,7 @@ quality-gate:
   image: node:20-alpine
   script:
     - git diff origin/$CI_MERGE_REQUEST_TARGET_BRANCH_NAME...HEAD > changes.diff
-    - npx codesense@latest check --api-key $CODESENSE_API_KEY --diff changes.diff
+    - npx @codesenseai/codesense@latest check --api-key $CODESENSE_API_KEY --diff changes.diff
   rules:
     - if: $CI_MERGE_REQUEST_ID
 ```
@@ -137,7 +137,7 @@ pipelines:
           image: node:20-alpine
           script:
             - git diff origin/main...HEAD > changes.diff
-            - npx codesense@latest check --api-key $CODESENSE_API_KEY --diff changes.diff
+            - npx @codesenseai/codesense@latest check --api-key $CODESENSE_API_KEY --diff changes.diff
 ```
 
 > Add `CODESENSE_API_KEY` in Repository settings → Repository variables.
