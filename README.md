@@ -2,7 +2,7 @@
 
 > AI-powered code quality gate CLI for CI/CD pipelines.
 
-Submit a git diff to [CodeSense AI](https://codesense.online), get an AI + static analysis score, and automatically pass or fail your build — all in one command.
+Submit a git diff to [CodeSense AI](https://dev.codesense.online), get an AI + static analysis score, and automatically pass or fail your build — all in one command.
 
 ```bash
 npx @codesenseai/codesense check --api-key cs_xxx --diff changes.diff --threshold 70
@@ -29,7 +29,7 @@ npm install -g @codesenseai/codesense
 ## Prerequisites
 
 - Node.js **18 or later**
-- A **CodeSense pipeline API key** — get one at [codesense.online](https://codesense.online) → Pipeline → API Keys
+- A **CodeSense pipeline API key** — get one at [codesense.online](https://dev.codesense.online) → Pipeline → API Keys
 
 ---
 
@@ -180,7 +180,7 @@ Any **high-severity security issue** causes an immediate fail regardless of scor
 ## Security
 
 - Store your API key as a **CI/CD secret** — never commit it to your repository.
-- API keys can be revoked at any time from the [CodeSense dashboard](https://codesense.online).
+- API keys can be revoked at any time from the [CodeSense dashboard](https://dev.codesense.online).
 - Each key has a configurable rate limit (requests per minute).
 
 ---
