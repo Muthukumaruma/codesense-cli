@@ -120,17 +120,37 @@ function printIssues(issues) {
   }
 
   const SEV_COLOR = { high: c.red, medium: c.yellow, low: c.dim }
+  const CAT_LABEL = { security: '🔒 Security', performance: '⚡ Performance', best_practice: '📐 Best Practice', style: '🎨 Style' }
 
   for (const [sev, list] of Object.entries(bySeverity)) {
     if (!list.length) continue
     for (const issue of list) {
       const loc = issue.line > 0 ? `:${issue.line}` : ''
-      console.log(`  ${clr(SEV_COLOR[sev], `[${sev.toUpperCase()}]`)} ${dim(issue.file + loc)}`)
+      const cat = CAT_LABEL[issue.category] || issue.category || ''
+      const src = issue.source === 'static' ? dim(' [static]') : dim(' [ai]')
+      console.log(`  ${clr(SEV_COLOR[sev], `[${sev.toUpperCase()}]`)} ${cat}${src}`)
+      console.log(`  ${dim('→')} ${dim(issue.file + loc)}`)
       console.log(`    ${bold(issue.message)}`)
-      if (issue.suggestion) console.log(`    ${dim('Fix: ' + issue.suggestion)}`)
+      if (issue.suggestion) console.log(`    ${clr(c.cyan, 'Fix:')} ${issue.suggestion}`)
       console.log()
     }
   }
+}
+
+function printBreakdown(breakdown) {
+  if (!breakdown) return
+  const categories = ['security', 'performance', 'best_practice', 'style']
+  const CAT_LABEL  = { security: 'Security', performance: 'Performance', best_practice: 'Best Practice', style: 'Style' }
+  console.log(`  ${bold('Score breakdown:')}`)
+  for (const cat of categories) {
+    const b = breakdown[cat]
+    if (!b) continue
+    const bar = '█'.repeat(Math.round(b.score / 10)) + '░'.repeat(10 - Math.round(b.score / 10))
+    const scoreCol = b.score >= 80 ? c.green : b.score >= 60 ? c.yellow : c.red
+    const issues = b.issueCount > 0 ? dim(` (${b.issueCount} issue${b.issueCount !== 1 ? 's' : ''})`) : ''
+    console.log(`  ${(CAT_LABEL[cat] + ':').padEnd(16)} ${clr(scoreCol, bar)} ${clr(scoreCol, String(b.score).padStart(3))}${issues}`)
+  }
+  console.log()
 }
 
 // ── Main ─────────────────────────────────────────────────────────────────────
@@ -257,17 +277,20 @@ ${bold('Exit codes:')}
 
   console.log(`  Status:  ${bold(statusIcon)}`)
   console.log(`  Score:   ${clr(scoreColor, bold(result.score))} / ${threshold} required`)
+  if (result.filesAnalyzed) console.log(`  Files:   ${dim(result.filesAnalyzed + ' analyzed')}`)
   if (result.summary) console.log(`  Summary: ${dim(result.summary)}`)
+  console.log()
+
+  printBreakdown(result.breakdown)
 
   const issueCount = result.issues?.length ?? 0
   if (issueCount > 0) {
-    console.log()
     console.log(`  ${bold(issueCount + ' issue' + (issueCount !== 1 ? 's' : '') + ' found:')}`)
     console.log()
     printIssues(result.issues)
   } else if (passed) {
-    console.log()
     console.log(`  ${clr(c.green, 'No issues found.')}`)
+    console.log()
   }
 
   console.log()
