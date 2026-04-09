@@ -53,13 +53,21 @@ function parseArgs(argv) {
 }
 
 // ── HTTP helper (native — no deps) ──────────────────────────────────────────
-async function request(url, { method = 'GET', headers = {}, body } = {}) {
-  const opts = { method, headers }
+async function request(url, { method = 'GET', headers = {}, body, timeoutMs = 30000 } = {}) {
+  const opts = { method, headers, signal: AbortSignal.timeout(timeoutMs) }
   if (body) {
     opts.body = JSON.stringify(body)
     opts.headers['Content-Type'] = 'application/json'
   }
-  const res = await fetch(url, opts)
+  let res
+  try {
+    res = await fetch(url, opts)
+  } catch (e) {
+    if (e.name === 'TimeoutError' || e.name === 'AbortError') {
+      throw Object.assign(new Error(`Request timed out after ${timeoutMs / 1000}s`), { code: 'TIMEOUT' })
+    }
+    throw Object.assign(new Error(`Could not reach server (${e.message})`), { code: 'NETWORK' })
+  }
   const text = await res.text()
   let data
   try { data = JSON.parse(text) } catch { data = { message: text } }
@@ -208,6 +216,8 @@ ${bold('Exit codes:')}
   } catch (e) {
     process.stdout.write('\n')
     console.error(clr(c.red, `  Error submitting diff: ${e.message}`))
+    if (e.code === 'NETWORK') console.error(dim('  Cannot reach the server. Check your internet connection or --host value.'))
+    if (e.code === 'TIMEOUT') console.error(dim('  Server did not respond in time. It may be starting up — retry in 30 seconds.'))
     if (e.status === 401) console.error(dim('  Check your --api-key value.'))
     if (e.status === 413) console.error(dim('  Diff is too large. Try a smaller range: git diff HEAD~1'))
     if (e.status === 429) console.error(dim('  Rate limit exceeded — wait a minute and retry.'))
