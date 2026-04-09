@@ -2,7 +2,7 @@
 
 > AI-powered code quality gate CLI for CI/CD pipelines.
 
-Submit a git diff to [CodeSense AI](https://dev.codesense.online), get an AI + static analysis score, and automatically pass or fail your build — all in one command.
+Submit a git diff to [CodeSense AI](https://app.codesense.online), get an AI + static analysis score, and automatically pass or fail your build — all in one command.
 
 ```bash
 npx @codesenseai/codesense check --api-key cs_xxx --diff changes.diff --threshold 70
@@ -29,7 +29,7 @@ npm install -g @codesenseai/codesense
 ## Prerequisites
 
 - Node.js **18 or later**
-- A **CodeSense pipeline API key** — get one at [codesense.online](https://dev.codesense.online) → Pipeline → API Keys
+- A **CodeSense pipeline API key** — get one at [codesense.online](https://app.codesense.online) → Pipeline → API Keys
 
 ---
 
@@ -62,19 +62,96 @@ codesense check --api-key <key> --diff <file> [options]
 
 ### Pipe diff from stdin
 ```bash
-git diff origin/main...HEAD | npx @codesenseai/codesense check --api-key cs_xxx --diff -
+git diff origin/main...HEAD | npx @codesenseai/codesense@latest check --api-key cs_xxx --diff -
 ```
 
 ### From a diff file
 ```bash
 git diff origin/main...HEAD > changes.diff
-npx @codesenseai/codesense check --api-key cs_xxx --diff changes.diff --threshold 80
+npx @codesenseai/codesense@latest check --api-key cs_xxx --diff changes.diff --threshold 80
+```
+
+### Check a specific commit
+```bash
+git show <commit-hash> | npx @codesenseai/codesense@latest check --api-key cs_xxx --diff -
+```
+
+### Compare a commit against its parent
+```bash
+git diff <commit-hash>^ <commit-hash> > changes.diff
+npx @codesenseai/codesense@latest check --api-key cs_xxx --diff changes.diff
 ```
 
 ### Output raw JSON (for custom scripts)
 ```bash
-npx @codesenseai/codesense check --api-key cs_xxx --diff - --json < changes.diff
+npx @codesenseai/codesense@latest check --api-key cs_xxx --diff - --json < changes.diff
 ```
+
+---
+
+## Common mistakes
+
+### ❌ Passing a commit hash as `--diff`
+
+```bash
+# WRONG — ea58e70a... is not a file path
+npx @codesenseai/codesense@latest check --api-key cs_xxx --diff ea58e70a88139c8ed2951f465061bcbdb9d6c7b9
+# Error: ENOENT: no such file or directory, open '...ea58e70a...'
+```
+
+`--diff` expects a **file path** or `-` for stdin, not a git commit hash. Generate the diff first:
+
+```bash
+# Correct — pipe the commit's diff via stdin
+git show ea58e70a88139c8ed2951f465061bcbdb9d6c7b9 | npx @codesenseai/codesense@latest check --api-key cs_xxx --diff -
+```
+
+### ❌ Missing `fetch-depth: 0` in GitHub Actions
+
+Without full history, `git diff origin/main...HEAD` may produce an empty diff. Always set:
+
+```yaml
+- uses: actions/checkout@v4
+  with:
+    fetch-depth: 0
+```
+
+---
+
+## Local testing (step-by-step)
+
+Before wiring up CI, verify your key and setup works locally:
+
+**Step 1 — Get your API key**
+
+Sign in at [app.codesense.online](https://app.codesense.online) → **Pipeline** → **API Keys** → click **New Key** → copy it.
+
+**Step 2 — Generate a diff**
+
+```bash
+# Changes since last commit
+git diff HEAD~1 > changes.diff
+
+# Changes in a specific commit
+git show <commit-hash> > changes.diff
+
+# Changes between your branch and main
+git diff main...HEAD > changes.diff
+```
+
+**Step 3 — Run the check**
+
+```bash
+npx @codesenseai/codesense@latest check \
+  --api-key cs_pipe_YOUR_KEY_HERE \
+  --diff changes.diff \
+  --threshold 70
+```
+
+**Step 4 — Read the result**
+
+- Exit code `0` → passed (score ≥ threshold)
+- Exit code `1` → failed (score < threshold, or a high-severity security issue found)
 
 ---
 
@@ -144,6 +221,35 @@ pipelines:
 
 ---
 
+### Azure DevOps Pipelines
+
+```yaml
+trigger: none
+pr:
+  - main
+
+pool:
+  vmImage: ubuntu-latest
+
+steps:
+  - checkout: self
+    fetchDepth: 0
+
+  - script: git diff origin/$(System.PullRequest.TargetBranch)...HEAD > changes.diff
+    displayName: Generate diff
+
+  - script: |
+      npx @codesenseai/codesense@latest check \
+        --api-key $(CODESENSE_API_KEY) \
+        --diff changes.diff \
+        --threshold 70
+    displayName: Run CodeSense Quality Gate
+```
+
+> Add `CODESENSE_API_KEY` in Pipelines → Library → Variable groups, marked as secret.
+
+---
+
 ### curl / Manual API
 
 If you'd rather call the API directly without the CLI:
@@ -180,7 +286,7 @@ Any **high-severity security issue** causes an immediate fail regardless of scor
 ## Security
 
 - Store your API key as a **CI/CD secret** — never commit it to your repository.
-- API keys can be revoked at any time from the [CodeSense dashboard](https://dev.codesense.online).
+- API keys can be revoked at any time from the [CodeSense dashboard](https://app.codesense.online).
 - Each key has a configurable rate limit (requests per minute).
 
 ---

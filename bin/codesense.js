@@ -8,6 +8,21 @@ import { readFileSync } from 'fs'
 import { createReadStream } from 'fs'
 import { createInterface } from 'readline'
 
+// ── Spinner (no deps) ────────────────────────────────────────────────────────
+function spinner(text) {
+  const frames = ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏']
+  let i = 0
+  const id = setInterval(() => {
+    process.stdout.write(`\r  ${frames[i++ % frames.length]} ${text}   `)
+  }, 80)
+  return {
+    stop(finalLine) {
+      clearInterval(id)
+      process.stdout.write(`\r${finalLine}\n`)
+    }
+  }
+}
+
 // ── Colours (no deps) ────────────────────────────────────────────────────────
 const c = {
   reset:  '\x1b[0m',
@@ -182,19 +197,21 @@ ${bold('Exit codes:')}
   // 2. Submit
   let jobId
   try {
-    process.stdout.write(dim('  Submitting diff...'))
+    const spin = spinner('Submitting diff...')
     const res = await request(`${host}/api/pipeline/analyze`, {
       method: 'POST',
       headers: { 'x-api-key': apiKey },
       body: { diff, threshold },
     })
     jobId = res.jobId
-    process.stdout.write(`\r  ${clr(c.green, '✓')} Submitted — job ${dim(jobId)}\n`)
+    spin.stop(`  ${clr(c.green, '✓')} Submitted — job ${dim(jobId)}`)
   } catch (e) {
     process.stdout.write('\n')
     console.error(clr(c.red, `  Error submitting diff: ${e.message}`))
     if (e.status === 401) console.error(dim('  Check your --api-key value.'))
+    if (e.status === 413) console.error(dim('  Diff is too large. Try a smaller range: git diff HEAD~1'))
     if (e.status === 429) console.error(dim('  Rate limit exceeded — wait a minute and retry.'))
+    if (e.status === 503) console.error(dim('  Server queue is temporarily unavailable. Retry in 30 seconds.'))
     process.exit(1)
   }
 
