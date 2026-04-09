@@ -5,7 +5,7 @@
 Submit a git diff to [CodeSense AI](https://app.codesense.online), get an AI + static analysis score, and automatically pass or fail your build — all in one command.
 
 ```bash
-npx @codesenseai/codesense check --api-key cs_xxx --diff changes.diff --threshold 70
+npx @codesenseai/cli check --api-key cs_xxx --diff changes.diff --threshold 70
 ```
 
 ---
@@ -15,13 +15,13 @@ npx @codesenseai/codesense check --api-key cs_xxx --diff changes.diff --threshol
 No installation needed. Use directly with `npx`:
 
 ```bash
-npx @codesenseai/codesense@latest check ...
+npx @codesenseai/cli@latest check ...
 ```
 
 Or install globally:
 
 ```bash
-npm install -g @codesenseai/codesense
+npm install -g @codesenseai/cli
 ```
 
 ---
@@ -62,29 +62,29 @@ codesense check --api-key <key> --diff <file> [options]
 
 ### Pipe diff from stdin
 ```bash
-git diff origin/main...HEAD | npx @codesenseai/codesense@latest check --api-key cs_xxx --diff -
+git diff origin/main...HEAD | npx @codesenseai/cli@latest check --api-key cs_xxx --diff -
 ```
 
 ### From a diff file
 ```bash
 git diff origin/main...HEAD > changes.diff
-npx @codesenseai/codesense@latest check --api-key cs_xxx --diff changes.diff --threshold 80
+npx @codesenseai/cli@latest check --api-key cs_xxx --diff changes.diff --threshold 80
 ```
 
 ### Check a specific commit
 ```bash
-git show <commit-hash> | npx @codesenseai/codesense@latest check --api-key cs_xxx --diff -
+git show <commit-hash> | npx @codesenseai/cli@latest check --api-key cs_xxx --diff -
 ```
 
 ### Compare a commit against its parent
 ```bash
 git diff <commit-hash>^ <commit-hash> > changes.diff
-npx @codesenseai/codesense@latest check --api-key cs_xxx --diff changes.diff
+npx @codesenseai/cli@latest check --api-key cs_xxx --diff changes.diff
 ```
 
 ### Output raw JSON (for custom scripts)
 ```bash
-npx @codesenseai/codesense@latest check --api-key cs_xxx --diff - --json < changes.diff
+npx @codesenseai/cli@latest check --api-key cs_xxx --diff - --json < changes.diff
 ```
 
 ---
@@ -95,7 +95,7 @@ npx @codesenseai/codesense@latest check --api-key cs_xxx --diff - --json < chang
 
 ```bash
 # WRONG — ea58e70a... is not a file path
-npx @codesenseai/codesense@latest check --api-key cs_xxx --diff ea58e70a88139c8ed2951f465061bcbdb9d6c7b9
+npx @codesenseai/cli@latest check --api-key cs_xxx --diff ea58e70a88139c8ed2951f465061bcbdb9d6c7b9
 # Error: ENOENT: no such file or directory, open '...ea58e70a...'
 ```
 
@@ -103,7 +103,7 @@ npx @codesenseai/codesense@latest check --api-key cs_xxx --diff ea58e70a88139c8e
 
 ```bash
 # Correct — pipe the commit's diff via stdin
-git show ea58e70a88139c8ed2951f465061bcbdb9d6c7b9 | npx @codesenseai/codesense@latest check --api-key cs_xxx --diff -
+git show ea58e70a88139c8ed2951f465061bcbdb9d6c7b9 | npx @codesenseai/cli@latest check --api-key cs_xxx --diff -
 ```
 
 ### ❌ Missing `fetch-depth: 0` in GitHub Actions
@@ -142,7 +142,7 @@ git diff main...HEAD > changes.diff
 **Step 3 — Run the check**
 
 ```bash
-npx @codesenseai/codesense@latest check \
+npx @codesenseai/cli@latest check \
   --api-key cs_pipe_YOUR_KEY_HERE \
   --diff changes.diff \
   --threshold 70
@@ -176,7 +176,7 @@ jobs:
 
       - name: Run CodeSense check
         run: |
-          npx @codesenseai/codesense@latest check \
+          npx @codesenseai/cli@latest check \
             --api-key ${{ secrets.CODESENSE_API_KEY }} \
             --diff changes.diff \
             --threshold 70
@@ -194,7 +194,7 @@ quality-gate:
   image: node:20-alpine
   script:
     - git diff origin/$CI_MERGE_REQUEST_TARGET_BRANCH_NAME...HEAD > changes.diff
-    - npx @codesenseai/codesense@latest check --api-key $CODESENSE_API_KEY --diff changes.diff
+    - npx @codesenseai/cli@latest check --api-key $CODESENSE_API_KEY --diff changes.diff
   rules:
     - if: $CI_MERGE_REQUEST_ID
 ```
@@ -214,7 +214,7 @@ pipelines:
           image: node:20-alpine
           script:
             - git diff origin/main...HEAD > changes.diff
-            - npx @codesenseai/codesense@latest check --api-key $CODESENSE_API_KEY --diff changes.diff
+            - npx @codesenseai/cli@latest check --api-key $CODESENSE_API_KEY --diff changes.diff
 ```
 
 > Add `CODESENSE_API_KEY` in Repository settings → Repository variables.
@@ -239,7 +239,7 @@ steps:
     displayName: Generate diff
 
   - script: |
-      npx @codesenseai/codesense@latest check \
+      npx @codesenseai/cli@latest check \
         --api-key $(CODESENSE_API_KEY) \
         --diff changes.diff \
         --threshold 70
