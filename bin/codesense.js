@@ -202,6 +202,14 @@ ${bold('Exit codes:')}
     process.exit(0)
   }
 
+  const MAX_DIFF_BYTES = 300000
+  if (Buffer.byteLength(diff, 'utf8') > MAX_DIFF_BYTES) {
+    console.log(clr(c.yellow, `  ⚠ Diff is large — truncating to first 300 KB for analysis.`))
+    console.log(dim('  Tip: use "git diff HEAD~1" or a specific commit range for faster results.'))
+    console.log()
+    diff = diff.slice(0, MAX_DIFF_BYTES)
+  }
+
   // 2. Submit
   let jobId
   try {
@@ -210,6 +218,7 @@ ${bold('Exit codes:')}
       method: 'POST',
       headers: { 'x-api-key': apiKey },
       body: { diff, threshold },
+      timeoutMs: 120000,
     })
     jobId = res.jobId
     spin.stop(`  ${clr(c.green, '✓')} Submitted — job ${dim(jobId)}`)
